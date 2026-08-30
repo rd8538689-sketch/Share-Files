@@ -1,0 +1,71 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The unique identifier for the user" },
+        "email": { "type": "string", "format": "email", "description": "The user's email address" },
+        "displayName": { "type": "string", "description": "The user's display name" },
+        "photoURL": { "type": "string", "description": "The user's profile picture URL" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the user account was created" }
+      },
+      "required": ["uid", "email"]
+    },
+    "File": {
+      "title": "File",
+      "description": "Metadata for a shared file",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "The unique identifier for the file" },
+        "name": { "type": "string", "description": "The name of the file" },
+        "size": { "type": "number", "description": "The size of the file in bytes" },
+        "type": { "type": "string", "description": "The MIME type of the file" },
+        "ownerId": { "type": "string", "description": "The UID of the user who uploaded the file" },
+        "downloadUrl": { "type": "string", "description": "The URL to download the file" },
+        "isPublic": { "type": "boolean", "description": "Whether the file is publicly shared" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the file was uploaded" }
+      },
+      "required": ["id", "name", "size", "ownerId", "downloadUrl", "createdAt"]
+    },
+    "SiteStats": {
+      "title": "SiteStats",
+      "description": "General website statistics",
+      "type": "object",
+      "properties": {
+        "visitorCount": { "type": "number", "description": "Total number of visitors" }
+      },
+      "required": ["visitorCount"]
+    },
+    "Presence": {
+      "title": "Presence",
+      "description": "Real-time user presence session",
+      "type": "object",
+      "properties": {
+        "lastSeen": { "type": "string", "format": "date-time", "description": "Last heartbeat timestamp" },
+        "isGuest": { "type": "boolean", "description": "Whether the user is a guest" },
+        "path": { "type": "string", "description": "Current page path" }
+      },
+      "required": ["lastSeen"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "/files/{fileId}": {
+      "schema": "File",
+      "description": "Shared files metadata"
+    },
+    "/stats/site": {
+      "schema": "SiteStats",
+      "description": "Global site statistics"
+    },
+    "/presence/{sessionId}": {
+      "schema": "Presence",
+      "description": "Active user sessions"
+    }
+  }
+}

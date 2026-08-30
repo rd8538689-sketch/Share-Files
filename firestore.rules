@@ -1,0 +1,96 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isDocOwner() {
+      return (isAuthenticated() && request.auth.uid == resource.data.ownerId) || 
+             (!isAuthenticated() && resource.data.ownerId.matches('^guest-.*'));
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "dolandebnath08@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidUser(data) {
+      return data.uid is string &&
+             (data.email == null || data.email is string);
+    }
+
+    function isValidFile(data) {
+      return data.keys().hasAll(['id', 'name', 'size', 'ownerId', 'downloadUrl', 'createdAt', 'isPublic']) &&
+             data.name is string && data.name.size() < 255 &&
+             data.size is number && data.size >= 0 &&
+             data.ownerId is string &&
+             data.downloadUrl is string &&
+             data.createdAt is string &&
+             data.isPublic is bool;
+    }
+
+    function isValidPresence(data) {
+      return data.lastSeen is timestamp &&
+             (data.isGuest == null || data.isGuest is bool) &&
+             (data.path == null || (data.path is string && data.path.size() < 200)) &&
+             (data.userAgent == null || (data.userAgent is string && data.userAgent.size() < 500));
+    }
+
+    function isValidFolder(data) {
+      return data.keys().hasAll(['id', 'name', 'ownerId', 'createdAt', 'isGuest']) &&
+             data.name is string && data.name.size() < 100 &&
+             data.ownerId is string &&
+             data.createdAt is string &&
+             data.isGuest is bool;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /folders/{folderId} {
+      allow read: if isDocOwner() || isAdmin();
+      allow create: if (isAuthenticated() || request.resource.data.ownerId.matches('^guest-.*')) && 
+                      isValidFolder(request.resource.data);
+      allow update: if (isDocOwner() || isAdmin()) && isValidFolder(request.resource.data);
+      allow delete: if (isDocOwner() || isAdmin());
+    }
+
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if (isOwner(userId) || isAdmin()) && isValidUser(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /files/{fileId} {
+      allow read: if resource.data.isPublic == true || isDocOwner() || isAdmin();
+      allow create: if (isAuthenticated() || request.resource.data.ownerId.matches('^guest-.*')) && 
+                      isValidFile(request.resource.data);
+      allow update: if (isDocOwner() || isAdmin()) && isValidFile(request.resource.data);
+      allow delete: if (isDocOwner() || isAdmin());
+    }
+
+    match /stats/site {
+      allow read: if true;
+      allow create: if true;
+      allow update: if request.resource.data.visitorCount == resource.data.visitorCount + 1;
+    }
+
+    match /presence/{sessionId} {
+      allow read: if true;
+      allow create: if isValidPresence(request.resource.data);
+      allow update: if isValidPresence(request.resource.data);
+      allow delete: if true; // Allow cleanup
+    }
+  }
+}
