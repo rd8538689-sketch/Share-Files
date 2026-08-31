@@ -804,10 +804,11 @@ export default function App() {
   const [isScrolling, setIsScrolling] = useState(false);
   const [hasReachedBottom, setHasReachedBottom] = useState(false);
   const scrollTimeout = useRef<NodeJS.Timeout | null>(null);
-  const [view, setView] = useState<'landing' | 'vault'>('vault');
+  const [view, setView] = useState<'landing' | 'vault'>('landing');
   const [activeTab, setActiveTab] = useState<'home' | 'vault' | 'activity' | 'profile'>('vault');
   const [showOfflineShare, setShowOfflineShare] = useState(false);
   const [initialP2pFile, setInitialP2pFile] = useState<File | null>(null);
+  const [showOnlineShareModal, setShowOnlineShareModal] = useState(false);
 
   useEffect(() => {
     if (view === 'vault') {
@@ -1884,182 +1885,106 @@ export default function App() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="flex-1 flex flex-col"
+            className="flex-1 flex flex-col justify-center items-center min-h-screen p-4 sm:p-6 bg-gradient-to-b from-[#0b0f19] via-[#05070d] to-[#020305]"
           >
-            {/* Website Header */}
-            <header className="p-6 md:p-12 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-accent rounded-lg flex items-center justify-center border border-accent/20 overflow-hidden">
-                  {logoUrl ? (
-                    <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                  ) : (
-                    <Share2 className="w-6 h-6 text-black" />
-                  )}
-                </div>
-                <h1 className="text-2xl font-display font-black tracking-tighter text-white uppercase">SHARE FILES</h1>
-              </div>
+            <main className="w-full max-w-md mx-auto my-auto">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                className="glass-card p-6 sm:p-8 rounded-[32px] border border-white/10 shadow-2xl backdrop-blur-2xl relative overflow-hidden"
+              >
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-accent to-transparent opacity-80" />
 
-              {/* Removed Profile info from landing header per user feedback */}
-            </header>
-
-            <main className="flex-1 flex flex-col max-w-4xl mx-auto w-full p-4 sm:p-6 md:p-12">
-              <div className="flex-1 flex flex-col items-center justify-center text-center space-y-16 py-12">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="space-y-8"
-                >
-                  <div className="flex flex-col items-center gap-4">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent/5 border border-accent/20 rounded-md">
-                      <span className="w-2 h-2 bg-accent rounded-full animate-pulse" />
-                      <span className="text-[10px] font-bold text-accent uppercase tracking-[0.3em]">SHARE FILES</span>
-                    </div>
-
-                    {visitorCount !== null && (
-                      <div className="flex items-center gap-3 px-4 py-2 bg-blue-500/10 border border-blue-500/20 rounded-md">
-                        <Users className="w-3.5 h-3.5 text-blue-500" />
-                        <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">
-                          {visitorCount.toLocaleString()} ACTIVE USERS
-                        </span>
-                      </div>
+                {/* App Brand Header */}
+                <div className="text-center mb-7">
+                  <div className="w-16 h-16 bg-accent/10 border border-accent/30 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-accent/15">
+                    {logoUrl ? (
+                      <img src={logoUrl} alt="Logo" className="w-10 h-10 object-cover rounded-xl" referrerPolicy="no-referrer" />
+                    ) : (
+                      <Share2 className="w-8 h-8 text-accent" />
                     )}
                   </div>
-                  
-                  <h2 className="text-6xl md:text-8xl font-display font-bold leading-[0.85] tracking-tighter text-white uppercase">
-                    SECURE <br />
-                    <span className="text-accent">FILES</span>
-                  </h2>
-                  
-                  <p className="text-zinc-500 text-sm font-mono uppercase tracking-widest max-w-md mx-auto leading-relaxed">
-                    Fast and secure file storage.
-                    <span className="text-zinc-400">Pro</span> // <span className="text-zinc-400">Guest</span>
+                  <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white uppercase flex items-center justify-center gap-2">
+                    ShareFiles
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent/20 text-accent font-bold tracking-wider">APP</span>
+                  </h1>
+                  <p className="text-xs text-zinc-400 font-medium mt-1">
+                    Fast Cloud Storage & Secure File Sharing
                   </p>
-                </motion.div>
-
-                <div className="w-full max-w-sm space-y-4">
-                  <div className="space-y-3">
-                    <button 
-                      onClick={() => login('google')}
-                      className="w-full bg-white text-black py-4 rounded-2xl font-black uppercase tracking-[0.2em] flex items-center justify-center gap-4 hover:bg-zinc-100 active:scale-95 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] group/btn"
-                    >
-                      <div className="w-6 h-6 flex items-center justify-center transition-transform group-hover/btn:scale-110">
-                        <svg viewBox="0 0 24 24" className="w-5 h-5">
-                          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.66l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.47 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                        </svg>
-                      </div>
-                      <span className="text-[10px]">Continue with Google</span>
-                    </button>
-
-                    <div className="grid grid-cols-3 gap-3">
-                      <button 
-                        onClick={() => login('apple')}
-                        className="flex-1 bg-black text-white py-4 rounded-2xl flex items-center justify-center hover:bg-zinc-800 active:scale-95 transition-all border border-white/10 group/btn shadow-xl"
-                        title="Continue with Apple"
-                      >
-                        <div className="transition-transform group-hover/btn:scale-110">
-                          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M17.05 20.28c-.98.95-2.05 1.61-3.22 1.61-1.14 0-1.55-.67-2.83-.67-1.28 0-1.74.67-2.83.67-1.14 0-2.23-.74-3.22-1.61-2.02-2.02-3.55-5.71-3.55-8.81 0-2.93 1.54-4.51 3.02-4.51 1.14 0 1.9.72 2.76.72.82 0 1.57-.72 2.76-.72 1.48 0 3.02 1.58 3.02 4.51-.02.43-.07.82-.12 1.2-.55 3.39-2.02 6.67-2.05 7.62zm-3.05-15.03c.53-.61.91-1.42.91-2.25 0-.12-.01-.24-.04-.32-.74.07-1.64.55-2.17 1.16-.48.53-.91 1.34-.91 2.21 0 .15.02.26.04.36s.18.15.26.15c.67 0 1.48-.61 1.91-1.31z" />
-                          </svg>
-                        </div>
-                      </button>
-                      <button 
-                        onClick={() => login('facebook')}
-                        className="flex-1 bg-[#1877F2] text-white py-4 rounded-2xl flex items-center justify-center hover:bg-[#166fe5] active:scale-95 transition-all shadow-lg shadow-blue-500/20 group/btn"
-                        title="Continue with Facebook"
-                      >
-                        <div className="transition-transform group-hover/btn:scale-110">
-                          <Facebook className="w-5 h-5 fill-white stroke-none" />
-                        </div>
-                      </button>
-                      <button 
-                        onClick={() => login('github')}
-                        className="flex-1 bg-[#24292F] text-white py-4 rounded-2xl flex items-center justify-center hover:bg-[#1c1f23] active:scale-95 transition-all group/btn border border-white/5"
-                        title="Continue with GitHub"
-                      >
-                        <div className="transition-transform group-hover/btn:scale-110 text-white">
-                          <Github className="w-5 h-5 fill-current" />
-                        </div>
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-4 py-2">
-                    <div className="h-px flex-1 bg-white/5" />
-                    <span className="text-[8px] font-bold text-zinc-600 uppercase tracking-[0.3em]">OR</span>
-                    <div className="h-px flex-1 bg-white/5" />
-                  </div>
-
-                  <div className="space-y-3">
-                    <button 
-                      onClick={() => login('email')}
-                      className="w-full py-5 rounded-2xl bg-white/5 border border-white/10 text-zinc-400 text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-white/10 hover:text-white transition-all flex items-center justify-center gap-3 group"
-                    >
-                      <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-accent group-hover:text-black transition-all">
-                        <Mail className="w-4 h-4" />
-                      </div>
-                      Sign in with Email
-                    </button>
-                    
-                    <button 
-                      onClick={startGuestSession}
-                      className="w-full py-5 rounded-2xl bg-white/5 border border-white/10 text-zinc-400 text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-white/10 hover:text-white transition-all flex items-center justify-center gap-3 group"
-                    >
-                      <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-blue-500 group-hover:text-white transition-all">
-                        <UserCircle className="w-4 h-4" />
-                      </div>
-                      Access as Guest
-                    </button>
-
-                    <button 
-                      onClick={() => setShowOfflineShare(true)}
-                      className="w-full py-5 rounded-2xl bg-white/5 border border-white/10 text-zinc-400 text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-white/10 hover:text-white transition-all flex items-center justify-center gap-3 group"
-                    >
-                      <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-accent group-hover:text-black transition-all">
-                        <Zap className="w-4 h-4 text-accent animate-pulse" />
-                      </div>
-                      Offline P2P Share
-                    </button>
-                  </div>
-
-                  {(user || isGuestMode) && (
-                    <div className="w-full pt-6">
-                      <button 
-                        onClick={() => setView('vault')}
-                        className="w-full py-5 bg-accent text-black rounded-2xl text-[11px] font-black uppercase tracking-[0.4em] hover:brightness-110 transition-all flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(0,255,148,0.3)] animate-pulse-slow"
-                      >
-                        <Shield className="w-5 h-5" />
-                        ENTER PRIVATE VAULT
-                      </button>
-                    </div>
-                  )}
                 </div>
 
-                {/* Features Section */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-12 pb-24">
-                  {[
-                    { icon: Shield, title: "SECURE VAULT", desc: "Military-grade encryption for all your sensitive files and folders." },
-                    { icon: Zap, title: "TURBO SPEED", desc: "Blazing fast upload and download speeds with real-time tracking." },
-                    { icon: Share2, title: "EASY SHARING", desc: "Generate secure share links with custom expiry and password protection." }
-                  ].map((feat, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, y: 30 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.5 + i * 0.1 }}
-                      className="glass-card p-8 rounded-[32px] text-left space-y-4 group hover:border-accent/30 transition-all"
+                {/* Login Action Buttons */}
+                <div className="space-y-3 mb-4">
+                  {/* Google Login */}
+                  <button 
+                    onClick={() => login('google')}
+                    className="w-full bg-white hover:bg-zinc-100 text-black py-3.5 px-4 rounded-2xl font-bold text-xs flex items-center justify-center gap-3 transition-all active:scale-[0.98] shadow-lg shadow-white/10 group"
+                  >
+                    <svg viewBox="0 0 24 24" className="w-4 h-4 shrink-0">
+                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.66l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.47 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                    </svg>
+                    <span>Continue with Google</span>
+                  </button>
+
+                  {/* Social Buttons */}
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <button 
+                      onClick={() => login('facebook')}
+                      className="py-3 px-3 bg-[#1877F2]/20 hover:bg-[#1877F2]/30 border border-[#1877F2]/40 rounded-xl text-white font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-95"
                     >
-                      <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center group-hover:bg-accent group-hover:text-black transition-all">
-                        <feat.icon className="w-6 h-6" />
-                      </div>
-                      <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white">{feat.title}</h3>
-                      <p className="text-[10px] leading-relaxed text-zinc-500 font-medium uppercase tracking-widest">{feat.desc}</p>
-                    </motion.div>
-                  ))}
+                      <Facebook className="w-4 h-4 fill-white shrink-0" />
+                      <span>Facebook</span>
+                    </button>
+
+                    <button 
+                      onClick={() => login('github')}
+                      className="py-3 px-3 bg-white/10 hover:bg-white/15 border border-white/15 rounded-xl text-white font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-95"
+                    >
+                      <Github className="w-4 h-4 fill-current shrink-0" />
+                      <span>GitHub</span>
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-3 py-1">
+                    <div className="h-px flex-1 bg-white/10" />
+                    <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">OR</span>
+                    <div className="h-px flex-1 bg-white/10" />
+                  </div>
+
+                  {/* Email / Password Sign In */}
+                  <button 
+                    onClick={() => login('email')}
+                    className="w-full py-3.5 px-4 rounded-2xl bg-white/5 border border-white/10 hover:border-accent/40 text-white text-xs font-bold transition-all flex items-center justify-center gap-2.5 hover:bg-white/10 active:scale-[0.98]"
+                  >
+                    <Mail className="w-4 h-4 text-accent" />
+                    <span>Sign in with Email & Password</span>
+                  </button>
+
+                  {/* Guest Instant Access */}
+                  <button 
+                    onClick={startGuestSession}
+                    className="w-full py-3.5 px-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-blue-400/40 text-zinc-400 hover:text-white text-xs font-bold transition-all flex items-center justify-center gap-2.5 hover:bg-white/5 active:scale-[0.98]"
+                  >
+                    <UserCircle className="w-4 h-4 text-blue-400" />
+                    <span>Continue as Instant Guest</span>
+                  </button>
                 </div>
-              </div>
+
+                {(user || isGuestMode) && (
+                  <div className="pt-4 border-t border-white/10">
+                    <button 
+                      onClick={() => setView('vault')}
+                      className="w-full py-3.5 bg-accent hover:brightness-110 text-black font-black text-xs uppercase tracking-widest rounded-2xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-accent/25 active:scale-[0.98]"
+                    >
+                      <Shield className="w-4 h-4" />
+                      <span>Open Vault ({user?.displayName || 'Active Session'})</span>
+                    </button>
+                  </div>
+                )}
+              </motion.div>
             </main>
           </motion.div>
         ) : view === 'vault' ? (
@@ -2099,42 +2024,65 @@ export default function App() {
                       <span>Send / Receive</span>
                     </button>
 
-                    <div className="relative group">
-                      <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden cursor-pointer hover:border-accent/40 transition-all">
-                        {user?.photoURL ? (
-                          <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                        ) : (
-                          <UserCircle className="w-5 h-5 text-zinc-400" />
-                        )}
-                      </div>
-                      <div className="absolute right-0 top-full mt-2 w-48 bg-zinc-900 border border-white/10 rounded-2xl p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all shadow-2xl z-50">
-                        <div className="px-3 py-2 border-b border-white/5 mb-1">
-                          <p className="text-xs font-bold text-white truncate">{userName || user?.displayName || 'User'}</p>
-                          <p className="text-[10px] text-accent">Active Session</p>
+                    {user ? (
+                      <div className="relative group">
+                        <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden cursor-pointer hover:border-accent/40 transition-all">
+                          {user?.photoURL ? (
+                            <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                          ) : (
+                            <UserCircle className="w-5 h-5 text-zinc-400" />
+                          )}
                         </div>
-                        <button 
-                          onClick={() => setShowActivityLog(true)}
-                          className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-zinc-300 hover:text-white hover:bg-white/5 rounded-xl transition-all"
-                        >
-                          <Clock className="w-4 h-4 text-zinc-400" />
-                          Transfer History
-                        </button>
-                        <button 
-                          onClick={logout}
-                          className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-red-400 hover:bg-red-500/10 rounded-xl transition-all"
-                        >
-                          <LogOut className="w-4 h-4" />
-                          Sign Out
-                        </button>
+                        <div className="absolute right-0 top-full mt-2 w-48 bg-zinc-900 border border-white/10 rounded-2xl p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all shadow-2xl z-50">
+                          <div className="px-3 py-2 border-b border-white/5 mb-1">
+                            <p className="text-xs font-bold text-white truncate">{userName || user?.displayName || user?.email || 'User'}</p>
+                            <p className="text-[10px] text-accent font-semibold">Account Active</p>
+                          </div>
+                          <button 
+                            onClick={() => setShowActivityLog(true)}
+                            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-zinc-300 hover:text-white hover:bg-white/5 rounded-xl transition-all"
+                          >
+                            <Clock className="w-4 h-4 text-zinc-400" />
+                            Transfer History
+                          </button>
+                          <button 
+                            onClick={logout}
+                            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-red-400 hover:bg-red-500/10 rounded-xl transition-all"
+                          >
+                            <LogOut className="w-4 h-4" />
+                            Sign Out
+                          </button>
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <button 
+                        onClick={() => setShowEmailAuthModal(true)}
+                        className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-accent hover:text-black border border-white/10 hover:border-accent text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm active:scale-95"
+                      >
+                        <UserCircle className="w-4 h-4" />
+                        <span>Log In</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               </header>
 
               <main className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 py-4 pb-28 space-y-5">
                 {/* Mobile/Native App Quick Action Hero Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                  <button 
+                    onClick={() => setShowOnlineShareModal(true)}
+                    className="p-4 rounded-2xl bg-gradient-to-br from-blue-500/20 to-blue-500/5 border border-blue-500/30 hover:border-blue-400 flex flex-col items-start justify-between gap-3 text-left transition-all active:scale-[0.98] group"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-blue-500 text-white flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform">
+                      <Globe className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs sm:text-sm font-bold text-white">Online Share</h4>
+                      <p className="text-[10px] text-zinc-400">Web Link & QR Code</p>
+                    </div>
+                  </button>
+
                   <button 
                     onClick={() => setShowOfflineShare(true)}
                     className="p-4 rounded-2xl bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/30 hover:border-accent flex flex-col items-start justify-between gap-3 text-left transition-all active:scale-[0.98] group"
@@ -2143,7 +2091,7 @@ export default function App() {
                       <Zap className="w-5 h-5 fill-black" />
                     </div>
                     <div>
-                      <h4 className="text-xs sm:text-sm font-bold text-white">Send & Receive</h4>
+                      <h4 className="text-xs sm:text-sm font-bold text-white">Offline Send</h4>
                       <p className="text-[10px] text-zinc-400">Offline P2P & Sound</p>
                     </div>
                   </button>
@@ -2152,7 +2100,7 @@ export default function App() {
                     onClick={() => fileInputRef.current?.click()}
                     className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-white/20 flex flex-col items-start justify-between gap-3 text-left transition-all active:scale-[0.98] group"
                   >
-                    <div className="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <div className="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center group-hover:scale-110 transition-transform">
                       <Upload className="w-5 h-5" />
                     </div>
                     <div>
@@ -2174,7 +2122,7 @@ export default function App() {
                     </div>
                   </button>
 
-                  <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col items-start justify-between gap-2">
+                  <div className="col-span-2 sm:col-span-1 p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col items-start justify-between gap-2">
                     <div className="flex items-center justify-between w-full">
                       <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
                         <HardDrive className="w-4 h-4" />
@@ -3255,6 +3203,104 @@ export default function App() {
           )}
         </AnimatePresence>
 
+        {/* Global Online Share Hub Modal */}
+        <AnimatePresence>
+          {showOnlineShareModal && (
+            <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowOnlineShareModal(false)}
+                className="fixed inset-0 bg-black/90 backdrop-blur-xl"
+              />
+
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="glass-card max-w-lg w-full p-6 sm:p-8 rounded-3xl border border-white/10 relative z-10 space-y-6 shadow-2xl my-auto"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-blue-500/20 text-blue-400 flex items-center justify-center border border-blue-500/30">
+                      <Globe className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-black tracking-tight text-white uppercase">Online Share Hub</h3>
+                      <p className="text-xs text-zinc-400">Share any file securely with a web link</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => setShowOnlineShareModal(false)}
+                    className="p-2 text-zinc-400 hover:text-white hover:bg-white/5 rounded-xl transition-all"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {files.length === 0 ? (
+                  <div className="text-center py-8 px-4 border border-dashed border-white/10 rounded-2xl space-y-3">
+                    <Upload className="w-8 h-8 text-zinc-500 mx-auto" />
+                    <p className="text-xs text-zinc-400">No files in your vault yet.</p>
+                    <button 
+                      onClick={() => {
+                        setShowOnlineShareModal(false);
+                        fileInputRef.current?.click();
+                      }}
+                      className="px-4 py-2 bg-accent text-black font-bold text-xs rounded-xl shadow-md hover:brightness-110 transition-all"
+                    >
+                      Upload File First
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+                      Select a file from your Vault to generate an Online Share Link:
+                    </p>
+                    <div className="max-h-60 overflow-y-auto space-y-2 pr-1 scrollbar-thin">
+                      {files.map(f => (
+                        <div 
+                          key={f.id}
+                          className="flex items-center justify-between p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/15 transition-all group"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-9 h-9 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
+                              <FileTypeIcon type={f.type} />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-xs font-bold text-white truncate group-hover:text-accent transition-colors">{f.name}</p>
+                              <p className="text-[9px] text-zinc-500 font-medium">{formatSize(f.size)}</p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => {
+                              setShowOnlineShareModal(false);
+                              setShareFile(f);
+                            }}
+                            className="px-3 py-1.5 rounded-xl bg-blue-500/20 text-blue-400 hover:bg-blue-500 hover:text-white font-bold text-xs transition-all shrink-0 ml-2"
+                          >
+                            Create Link
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 text-[11px] text-zinc-400 space-y-1">
+                  <p className="font-semibold text-zinc-300">💡 Online Sharing Benefits:</p>
+                  <ul className="list-disc list-inside space-y-0.5 text-zinc-500 text-[10px]">
+                    <li>Recipients can open and download without installing anything</li>
+                    <li>Optional password protection & automatic expiry date</li>
+                    <li>QR code available for instant mobile scanning</li>
+                  </ul>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
       {/* Reset Guest Session Confirmation Modal */}
       <AnimatePresence>
         {showResetConfirm && (
@@ -3483,105 +3529,150 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* Email Auth Modal */}
+      {/* App Login / Sign In Sheet */}
       <AnimatePresence>
         {showEmailAuthModal && (
-          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6">
+          <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 sm:p-6">
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowEmailAuthModal(false)}
-              className="absolute inset-0 bg-black/90 backdrop-blur-md"
+              className="absolute inset-0 bg-black/85 backdrop-blur-md"
             />
             <motion.div 
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="relative w-full max-w-md bg-[#0F0F11] border border-white/10 rounded-[32px] p-8 shadow-2xl overflow-hidden"
+              className="relative w-full max-w-md bg-[#0d131f] border border-white/10 rounded-[32px] p-6 sm:p-8 shadow-2xl overflow-hidden"
             >
-              <div className="absolute top-0 right-0 p-8 opacity-5">
-                <Mail className="w-32 h-32 -mr-8 -mt-8" />
-              </div>
-              
-              <div className="relative z-10 space-y-6">
-                <div className="w-16 h-16 bg-accent/10 rounded-2xl flex items-center justify-center border border-accent/20">
-                  <Mail className="w-8 h-8 text-accent" />
-                </div>
-                
-                <div className="space-y-2">
-                  <h3 className="text-2xl font-display font-bold tracking-tight text-white uppercase">
-                    {isSignUp ? 'Create Account' : 'Welcome Back'}
-                  </h3>
-                  <p className="text-zinc-500 text-sm font-mono uppercase tracking-widest leading-relaxed">
-                    {isSignUp ? 'Join the secure cloud vault' : 'Access your encrypted files'}
-                  </p>
+              <div className="relative z-10 space-y-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 bg-accent/20 rounded-2xl flex items-center justify-center border border-accent/40 text-accent">
+                      <Shield className="w-5 h-5 text-accent" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-white">
+                        {isSignUp ? 'Create Account' : 'Welcome to ShareFiles'}
+                      </h3>
+                      <p className="text-xs text-zinc-400">
+                        {isSignUp ? 'Sign up for instant cloud storage' : 'Sign in to access your cloud vault'}
+                      </p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => setShowEmailAuthModal(false)}
+                    className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white transition-all"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
 
-                <form onSubmit={handleEmailAuth} className="space-y-4">
-                  <div className="space-y-4">
-                    <div className="relative group">
-                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-accent transition-colors" />
+                {/* 1-Tap Social Sign In Grid */}
+                <div className="grid grid-cols-2 gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      login('google');
+                      setShowEmailAuthModal(false);
+                    }}
+                    className="py-3 px-3 bg-white/10 hover:bg-white/15 border border-white/15 hover:border-accent/50 rounded-2xl text-white font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-95 group shadow-sm"
+                  >
+                    <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                    </svg>
+                    <span>Google</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      login('facebook');
+                      setShowEmailAuthModal(false);
+                    }}
+                    className="py-3 px-3 bg-[#1877F2]/20 hover:bg-[#1877F2]/30 border border-[#1877F2]/40 rounded-2xl text-white font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-95 group shadow-sm"
+                  >
+                    <Facebook className="w-4 h-4 text-[#1877F2] fill-[#1877F2] shrink-0" />
+                    <span>Facebook</span>
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="h-[1px] flex-1 bg-white/10" />
+                  <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Or Email</span>
+                  <div className="h-[1px] flex-1 bg-white/10" />
+                </div>
+
+                <form onSubmit={handleEmailAuth} className="space-y-3">
+                  <div className="space-y-2">
+                    <div className="relative">
+                      <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                       <input 
-                        type="email"
-                        placeholder="EMAIL ADDRESS"
+                        type="email" 
+                        placeholder="Email Address"
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-4 text-xs font-bold text-white placeholder:text-zinc-700 focus:outline-none focus:border-accent/50 transition-all uppercase tracking-widest"
+                        className="w-full bg-white/5 border border-white/10 rounded-2xl pl-10 pr-4 py-3 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all"
                       />
                     </div>
-                    <div className="relative group">
-                      <Key className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-accent transition-colors" />
+                    <div className="relative">
+                      <Key className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                       <input 
                         type="password"
-                        placeholder="PASSWORD"
+                        placeholder="Password"
                         required
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-4 text-xs font-bold text-white placeholder:text-zinc-700 focus:outline-none focus:border-accent/50 transition-all uppercase tracking-widest"
+                        className="w-full bg-white/5 border border-white/10 rounded-2xl pl-10 pr-4 py-3 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all"
                       />
                     </div>
                   </div>
 
                   {loginError && (
-                    <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3">
-                      <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
-                      <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest leading-tight">{loginError}</p>
+                    <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-2.5">
+                      <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+                      <p className="text-[11px] text-red-400 leading-tight">{loginError}</p>
                     </div>
                   )}
 
                   <button 
                     type="submit"
                     disabled={authLoading}
-                    className="w-full py-5 bg-accent hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed text-black rounded-2xl font-black text-xs uppercase tracking-[0.3em] transition-all shadow-lg shadow-accent/20 flex items-center justify-center gap-2"
+                    className="w-full py-3.5 bg-accent hover:brightness-110 disabled:opacity-50 text-black rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-lg shadow-accent/25 active:scale-95"
                   >
                     {authLoading ? (
                       <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
                     ) : (
                       <>
-                        <Shield className="w-4 h-4" />
-                        {isSignUp ? 'Initialize Account' : 'Authorize Access'}
+                        <Shield className="w-4 h-4 fill-black" />
+                        <span>{isSignUp ? 'Create Free Account' : 'Sign In'}</span>
                       </>
                     )}
                   </button>
                 </form>
 
-                <div className="pt-4 text-center">
+                <div className="flex items-center justify-between text-xs pt-1">
                   <button 
                     onClick={() => setIsSignUp(!isSignUp)}
-                    className="text-[10px] font-bold text-zinc-500 hover:text-accent uppercase tracking-[0.2em] transition-colors"
+                    className="text-zinc-400 hover:text-accent font-medium transition-colors"
                   >
-                    {isSignUp ? 'Already have an account? Sign In' : 'New here? Create an account'}
+                    {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsGuestMode(true);
+                      setShowEmailAuthModal(false);
+                    }}
+                    className="text-accent hover:underline font-semibold"
+                  >
+                    Continue as Guest
                   </button>
                 </div>
-
-                <button 
-                  onClick={() => setShowEmailAuthModal(false)}
-                  className="w-full py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-zinc-500 text-[10px] font-bold uppercase tracking-widest transition-all"
-                >
-                  Cancel
-                </button>
               </div>
             </motion.div>
           </div>
@@ -3697,41 +3788,61 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* Native App Floating Bottom Navigation Bar */}
-      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-md bg-zinc-900/90 backdrop-blur-xl border border-white/10 rounded-full px-3 py-2 shadow-2xl flex items-center justify-around">
-        <button 
-          onClick={() => {
-            setShowOfflineShare(false);
-            setActiveCategory('all');
-          }}
-          className={cn(
-            "flex flex-col items-center gap-1 px-4 py-1.5 rounded-full transition-all active:scale-95",
-            !showOfflineShare && !showActivityLog ? "text-accent" : "text-zinc-400 hover:text-white"
-          )}
-        >
-          <HardDrive className="w-5 h-5" />
-          <span className="text-[10px] font-bold">Files</span>
-        </button>
+      {/* Native App Floating Bottom Navigation Bar (Only in Vault Mode) */}
+      {view === 'vault' && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-md bg-zinc-900/90 backdrop-blur-xl border border-white/10 rounded-full px-3 py-2 shadow-2xl flex items-center justify-around">
+          <button 
+            onClick={() => {
+              setShowOfflineShare(false);
+              setActiveCategory('all');
+            }}
+            className={cn(
+              "flex flex-col items-center gap-1 px-3 py-1.5 rounded-full transition-all active:scale-95",
+              !showOfflineShare && !showActivityLog ? "text-accent" : "text-zinc-400 hover:text-white"
+            )}
+          >
+            <HardDrive className="w-5 h-5" />
+            <span className="text-[10px] font-bold">Files</span>
+          </button>
 
-        <button 
-          onClick={() => setShowOfflineShare(true)}
-          className="flex items-center justify-center w-12 h-12 -mt-4 bg-accent text-black rounded-full shadow-lg shadow-accent/40 active:scale-90 hover:scale-105 transition-all"
-          title="Fast Transfer"
-        >
-          <Zap className="w-6 h-6 fill-black" />
-        </button>
+          <button 
+            onClick={() => setShowOfflineShare(true)}
+            className="flex items-center justify-center w-12 h-12 -mt-4 bg-accent text-black rounded-full shadow-lg shadow-accent/40 active:scale-90 hover:scale-105 transition-all"
+            title="Fast Transfer"
+          >
+            <Zap className="w-6 h-6 fill-black" />
+          </button>
 
-        <button 
-          onClick={() => setShowActivityLog(true)}
-          className={cn(
-            "flex flex-col items-center gap-1 px-4 py-1.5 rounded-full transition-all active:scale-95",
-            showActivityLog ? "text-accent" : "text-zinc-400 hover:text-white"
-          )}
-        >
-          <Clock className="w-5 h-5" />
-          <span className="text-[10px] font-bold">History</span>
-        </button>
-      </div>
+          <button 
+            onClick={() => setShowActivityLog(true)}
+            className={cn(
+              "flex flex-col items-center gap-1 px-3 py-1.5 rounded-full transition-all active:scale-95",
+              showActivityLog ? "text-accent" : "text-zinc-400 hover:text-white"
+            )}
+          >
+            <Clock className="w-5 h-5" />
+            <span className="text-[10px] font-bold">History</span>
+          </button>
+
+          <button 
+            onClick={() => {
+              if (user) {
+                logout();
+              } else {
+                setShowEmailAuthModal(true);
+              }
+            }}
+            className={cn(
+              "flex flex-col items-center gap-1 px-3 py-1.5 rounded-full transition-all active:scale-95",
+              user ? "text-emerald-400 hover:text-white" : "text-zinc-400 hover:text-accent"
+            )}
+            title={user ? "Sign Out" : "Log In"}
+          >
+            <UserCircle className="w-5 h-5" />
+            <span className="text-[10px] font-bold">{user ? "Log Out" : "Log In"}</span>
+          </button>
+        </div>
+      )}
 
       <AnimatePresence>
         {showOfflineShare && (
@@ -3746,16 +3857,18 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      <OppoFileDock 
-        onSendP2P={(file) => {
-          setInitialP2pFile(file);
-          setShowOfflineShare(true);
-        }}
-        onUploadToVault={(filesToUpload) => {
-          uploadFiles(filesToUpload);
-        }}
-        cloudFilesCount={files.length}
-      />
+      {view === 'vault' && (
+        <OppoFileDock 
+          onSendP2P={(file) => {
+            setInitialP2pFile(file);
+            setShowOfflineShare(true);
+          }}
+          onUploadToVault={(filesToUpload) => {
+            uploadFiles(filesToUpload);
+          }}
+          cloudFilesCount={files.length}
+        />
+      )}
       </div>
     </ErrorBoundary>
   </div>

@@ -6,7 +6,7 @@
   --font-display: "Rajdhani", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
   
-  /* Website Theme (Brutalist/Neon) */
+  /* Website Theme (Brutalist/Neon Green) */
   --color-accent: #00FF94;
   --color-accent-dim: rgba(0, 255, 148, 0.08);
   --color-accent-glow: rgba(0, 255, 148, 0.2);
@@ -14,10 +14,10 @@
   --color-card: #121214;
   --color-border: rgba(255, 255, 255, 0.06);
 
-  /* App Theme (Soft/Native - used via .app-mode) */
-  --color-app-accent: #6366f1;
-  --color-app-bg: #0f172a;
-  --color-app-card: rgba(30, 41, 59, 0.7);
+  /* App Theme (Native Green Accent) */
+  --color-app-accent: #00FF94;
+  --color-app-bg: #0b0f19;
+  --color-app-card: rgba(18, 24, 38, 0.7);
 }
 
 @layer base {
@@ -34,12 +34,12 @@
   }
 
   .app-mode {
-    --color-accent: var(--color-app-accent);
-    --color-bg: var(--color-app-bg);
-    --color-card: var(--color-app-card);
+    --color-accent: #00FF94;
+    --color-bg: #0b0f19;
+    --color-card: rgba(18, 24, 38, 0.8);
     background-image: none;
-    background: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 0% 100%, rgba(99, 102, 241, 0.05) 0%, transparent 30%);
+    background: radial-gradient(circle at 50% 0%, rgba(0, 255, 148, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 0% 100%, rgba(0, 255, 148, 0.04) 0%, transparent 30%);
     @apply font-sans;
   }
 
