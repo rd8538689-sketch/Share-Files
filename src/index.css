@@ -73,7 +73,23 @@
   }
 
   .glass-card {
-    @apply bg-[#121214]/40 backdrop-blur-xl border border-white/5 shadow-2xl;
+    @apply bg-[#121214]/90 border border-white/5 shadow-xl;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    contain: content;
+  }
+
+  /* Low RAM & 60fps Mobile Optimization */
+  * {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeSpeed;
+  }
+
+  /* Hardware acceleration helper */
+  .gpu-accel {
+    transform: translateZ(0);
+    will-change: transform;
+    backface-visibility: hidden;
   }
 
   .accent-button {

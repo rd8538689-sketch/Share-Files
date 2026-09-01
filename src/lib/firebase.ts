@@ -13,7 +13,7 @@ import {
   updateProfile,
   User 
 } from 'firebase/auth';
-import { initializeFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, onSnapshot, query, where, orderBy, getDocFromServer, increment, serverTimestamp } from 'firebase/firestore';
+import { initializeFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, onSnapshot, query, where, orderBy, getDocFromServer, increment, serverTimestamp, writeBatch } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 
 if (!firebaseConfig || !firebaseConfig.projectId) {
@@ -125,6 +125,7 @@ export {
   where, 
   orderBy,
   increment,
-  serverTimestamp
+  serverTimestamp,
+  writeBatch
 };
 export type { User };

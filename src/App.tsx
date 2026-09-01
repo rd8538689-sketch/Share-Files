@@ -17,6 +17,7 @@ import {
   doc, 
   setDoc, 
   getDoc,
+  getDocs,
   onSnapshot, 
   query, 
   where, 
@@ -26,7 +27,8 @@ import {
   deleteDoc,
   updateDoc,
   increment,
-  serverTimestamp
+  serverTimestamp,
+  writeBatch
 } from './lib/firebase';
 import { 
   Github,
@@ -810,22 +812,6 @@ export default function App() {
   const [initialP2pFile, setInitialP2pFile] = useState<File | null>(null);
   const [showOnlineShareModal, setShowOnlineShareModal] = useState(false);
 
-  useEffect(() => {
-    if (view === 'vault') {
-      const interval = setInterval(async () => {
-        const start = performance.now();
-        try {
-          await fetch('/api/ping');
-          const end = performance.now();
-          setLatency(Math.round(end - start));
-        } catch (e) {
-          console.error('Ping failed');
-        }
-      }, 5000);
-      return () => clearInterval(interval);
-    }
-  }, [view]);
-
   const [folders, setFolders] = useState<FolderMetadata[]>([]);
   const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null);
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
@@ -1076,13 +1062,63 @@ export default function App() {
     }
   };
 
+  const migrateGuestDataToUser = async (guestId: string, targetUser: User) => {
+    try {
+      console.log(`Binding guest data (${guestId}) to permanent user account (${targetUser.uid})...`);
+      const filesQ = query(collection(db, 'files'), where('ownerId', '==', guestId));
+      const filesSnap = await getDocs(filesQ);
+      
+      const foldersQ = query(collection(db, 'folders'), where('ownerId', '==', guestId));
+      const foldersSnap = await getDocs(foldersQ);
+
+      if (!filesSnap.empty || !foldersSnap.empty) {
+        const batch = writeBatch(db);
+        filesSnap.docs.forEach(docSnap => {
+          batch.update(docSnap.ref, {
+            ownerId: targetUser.uid,
+            isGuest: false,
+            uploadedBy: targetUser.displayName || targetUser.email || 'User'
+          });
+        });
+
+        foldersSnap.docs.forEach(docSnap => {
+          batch.update(docSnap.ref, {
+            ownerId: targetUser.uid,
+            isGuest: false
+          });
+        });
+
+        await batch.commit();
+        console.log(`Successfully migrated and bound ${filesSnap.size} files and ${foldersSnap.size} folders to ${targetUser.email || targetUser.uid}`);
+      }
+    } catch (err) {
+      console.warn('Guest account binding notice:', err);
+    }
+  };
+
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (u) => {
+    const unsubscribe = onAuthStateChanged(auth, async (u) => {
       setUser(u);
       setLoading(false);
       if (u) {
+        localStorage.setItem('app_session_started', 'true');
+        
+        // If user was previously using a guest session, seamlessly migrate all guest files to the user's permanent account
+        const storedGuest = localStorage.getItem('guest_session');
+        if (storedGuest) {
+          try {
+            const parsed = JSON.parse(storedGuest);
+            if (parsed && parsed.id) {
+              await migrateGuestDataToUser(parsed.id, u);
+            }
+          } catch (e) {
+            console.warn('Guest parsing error during auth binding', e);
+          }
+          localStorage.removeItem('guest_session');
+          setGuestSession(null);
+        }
+
         setIsGuestMode(false);
-        setView('vault');
         const userRef = doc(db, 'users', u.uid);
         setDoc(userRef, {
           uid: u.uid,
@@ -1093,7 +1129,6 @@ export default function App() {
           storageLimit: PRO_LIMIT
         }, { merge: true }).catch(err => {
           console.error('Failed to save user profile:', err);
-          // Don't throw here, just log. We want the user to be able to use the app even if profile save fails.
         });
       }
     });
@@ -1312,6 +1347,7 @@ export default function App() {
       await signOut(auth);
       setIsGuestMode(false);
       localStorage.removeItem('guest_session');
+      localStorage.removeItem('app_session_started');
       setGuestSession(null);
       setView('landing');
     } catch (err) {
@@ -2021,7 +2057,7 @@ export default function App() {
                       className="px-3 py-1.5 rounded-xl bg-accent text-black font-bold text-xs flex items-center gap-1.5 shadow-md shadow-accent/20 hover:brightness-110 active:scale-95 transition-all"
                     >
                       <Zap className="w-3.5 h-3.5 fill-black" />
-                      <span>Send / Receive</span>
+                      <span>Nearby Share</span>
                     </button>
 
                     {user ? (
@@ -3239,18 +3275,36 @@ export default function App() {
                   </button>
                 </div>
 
+                {/* Direct Upload & Share Action inside modal */}
+                <div className="flex items-center gap-2 p-3 bg-blue-500/10 border border-blue-500/20 rounded-2xl">
+                  <div className="w-8 h-8 rounded-xl bg-blue-500 text-white flex items-center justify-center shrink-0">
+                    <Upload className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold text-white">Share a New File</p>
+                    <p className="text-[10px] text-zinc-400">Pick from device & create link instantly</p>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      fileInputRef.current?.click();
+                    }}
+                    className="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 active:scale-95 text-white font-bold text-xs rounded-xl shadow transition-all shrink-0"
+                  >
+                    Select File
+                  </button>
+                </div>
+
                 {files.length === 0 ? (
                   <div className="text-center py-8 px-4 border border-dashed border-white/10 rounded-2xl space-y-3">
                     <Upload className="w-8 h-8 text-zinc-500 mx-auto" />
                     <p className="text-xs text-zinc-400">No files in your vault yet.</p>
                     <button 
                       onClick={() => {
-                        setShowOnlineShareModal(false);
                         fileInputRef.current?.click();
                       }}
                       className="px-4 py-2 bg-accent text-black font-bold text-xs rounded-xl shadow-md hover:brightness-110 transition-all"
                     >
-                      Upload File First
+                      Upload File Now
                     </button>
                   </div>
                 ) : (
@@ -3869,6 +3923,17 @@ export default function App() {
           cloudFilesCount={files.length}
         />
       )}
+
+      {/* Global Hidden File Input for Vault & Online Sharing */}
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        onChange={handleFileUpload} 
+        multiple 
+        className="hidden" 
+        id="global-file-upload-input"
+        aria-label="Upload files"
+      />
       </div>
     </ErrorBoundary>
   </div>

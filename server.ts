@@ -72,6 +72,7 @@ async function startServer() {
 
   // Ping endpoint for latency check
   app.get('/api/ping', (req, res) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.status(200).send('pong');
   });
 

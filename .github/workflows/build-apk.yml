@@ -40,6 +40,20 @@ jobs:
           fi
           echo "Java environment verified successfully."
 
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+
+      - name: Accept Android SDK Licenses and setup local.properties
+        run: |
+          yes | sdkmanager --licenses || true
+          if [ -n "$ANDROID_HOME" ]; then
+            echo "sdk.dir=$ANDROID_HOME" > local.properties
+          elif [ -n "$ANDROID_SDK_ROOT" ]; then
+            echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
+          fi
+          echo "local.properties configured:"
+          cat local.properties || true
+
       - name: Set up Gradle 9.3.1
         uses: gradle/actions/setup-gradle@v4
         with:
