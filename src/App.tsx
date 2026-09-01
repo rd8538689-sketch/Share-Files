@@ -814,6 +814,8 @@ export default function App() {
 
   const [folders, setFolders] = useState<FolderMetadata[]>([]);
   const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null);
+  const [isDraggingFiles, setIsDraggingFiles] = useState(false);
+  const [draggingFileCount, setDraggingFileCount] = useState<number>(0);
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
   const [showNewFolderModal, setShowNewFolderModal] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
@@ -2284,25 +2286,73 @@ export default function App() {
                       )}
                     </AnimatePresence>
 
-                    {/* Breadcrumbs */}
+                    {/* Breadcrumbs & Root Drop Target */}
                     {(currentFolderId || folders.length > 0) && !searchQuery && activeCategory === 'all' && (
-                        <div className="flex items-center gap-2 px-2">
+                        <div className="flex items-center gap-2 px-2 py-1">
                           <button 
                             onClick={() => setCurrentFolderId(null)}
+                            onDragOver={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                            }}
+                            onDragEnter={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setDragOverFolderId('root');
+                            }}
+                            onDragLeave={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              if (dragOverFolderId === 'root') setDragOverFolderId(null);
+                            }}
+                            onDrop={async (e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setDragOverFolderId(null);
+                              setIsDraggingFiles(false);
+
+                              if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                                uploadFiles(e.dataTransfer.files, null);
+                                return;
+                              }
+
+                              const dragDataString = e.dataTransfer.getData("text/plain");
+                              try {
+                                if (dragDataString) {
+                                  const dragData = JSON.parse(dragDataString);
+                                  if (dragData.type === 'vault-file') {
+                                    const idsToMove = dragData.selectedFileIds || [dragData.fileId];
+                                    for (const id of idsToMove) {
+                                      await moveFileToFolder(id, null);
+                                    }
+                                  }
+                                }
+                              } catch (err) {
+                                console.error("Failed to parse drop payload on root breadcrumb:", err);
+                              }
+                            }}
                             className={cn(
-                              "text-[10px] font-bold uppercase tracking-widest transition-colors whitespace-nowrap",
-                              !currentFolderId ? "text-accent" : "text-zinc-500 hover:text-white"
+                              "text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap",
+                              !currentFolderId ? "text-accent bg-accent/10 border border-accent/30" : "text-zinc-400 hover:text-white bg-white/5 hover:bg-white/10",
+                              dragOverFolderId === 'root' && "ring-2 ring-accent bg-accent/20 text-accent scale-105"
                             )}
                           >
-                            Root
+                            <HardDrive className="w-3 h-3" />
+                            <span>Root Vault</span>
                           </button>
                           {currentFolderId && (
                             <>
                               <span className="text-zinc-700">/</span>
-                              <span className="text-[10px] font-bold uppercase tracking-widest text-accent whitespace-nowrap">
+                              <span className="text-[10px] font-bold uppercase tracking-widest text-accent whitespace-nowrap px-2 py-0.5 rounded-lg bg-accent/5 border border-accent/20">
                                 {folders.find(f => f.id === currentFolderId)?.name || 'Folder'}
                               </span>
                             </>
+                          )}
+                          {isDraggingFiles && (
+                            <span className="text-[9px] font-semibold text-accent/80 ml-auto flex items-center gap-1 animate-pulse">
+                              <Upload className="w-3 h-3" />
+                              <span>Drag onto folder to move {draggingFileCount > 1 ? `(${draggingFileCount} files)` : ''}</span>
+                            </span>
                           )}
                         </div>
                     )}
@@ -2318,6 +2368,7 @@ export default function App() {
                           onDragOver={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
+                            e.dataTransfer.dropEffect = "move";
                           }}
                           onDragEnter={(e) => {
                             e.preventDefault();
@@ -2327,12 +2378,15 @@ export default function App() {
                           onDragLeave={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            setDragOverFolderId(null);
+                            if (dragOverFolderId === folder.id) {
+                              setDragOverFolderId(null);
+                            }
                           }}
                           onDrop={async (e) => {
                             e.preventDefault();
                             e.stopPropagation();
                             setDragOverFolderId(null);
+                            setIsDraggingFiles(false);
 
                             // Handle desktop/local files dropped onto folder zone
                             if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
@@ -2346,7 +2400,9 @@ export default function App() {
                               if (dragDataString) {
                                 const dragData = JSON.parse(dragDataString);
                                 if (dragData.type === 'vault-file') {
-                                  const idsToMove = dragData.selectedFileIds || [dragData.fileId];
+                                  const idsToMove = dragData.selectedFileIds && dragData.selectedFileIds.length > 0
+                                    ? dragData.selectedFileIds 
+                                    : [dragData.fileId];
                                   for (const id of idsToMove) {
                                     await moveFileToFolder(id, folder.id);
                                   }
@@ -2357,30 +2413,35 @@ export default function App() {
                             }
                           }}
                           className={cn(
-                            "glass-card p-4 rounded-2xl border-white/5 hover:border-accent/30 hover:bg-accent/[0.02] transition-all cursor-pointer group relative overflow-hidden",
+                            "glass-card p-4 rounded-2xl border-white/5 hover:border-accent/40 hover:bg-accent/[0.03] transition-all cursor-pointer group relative overflow-hidden",
                             currentFolderId === folder.id && "border-accent/50 bg-accent/5",
-                            dragOverFolderId === folder.id && "border-accent bg-accent/10 scale-105 shadow-[0_0_25px_rgba(0,255,157,0.3)] ring-2 ring-accent/20"
+                            dragOverFolderId === folder.id && "border-accent bg-accent/20 scale-[1.04] shadow-[0_0_35px_rgba(0,255,157,0.45)] ring-2 ring-accent"
                           )}
                         >
                           <AnimatePresence>
                             {dragOverFolderId === folder.id && (
                               <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                className="absolute inset-0 bg-[#00ff9d]/10 backdrop-blur-[2px] flex flex-col items-center justify-center gap-1 z-20 pointer-events-none"
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.9 }}
+                                className="absolute inset-0 bg-[#00ff9d]/20 backdrop-blur-[2px] flex flex-col items-center justify-center gap-1.5 z-20 pointer-events-none border-2 border-accent rounded-2xl"
                               >
-                                <Upload className="w-5 h-5 text-accent animate-bounce" />
-                                <span className="text-[8px] font-black tracking-[0.15em] text-accent uppercase">
-                                  Drop item
+                                <div className="w-8 h-8 rounded-full bg-accent text-black flex items-center justify-center shadow-lg shadow-accent/40 animate-bounce">
+                                  <Upload className="w-4 h-4 stroke-[3]" />
+                                </div>
+                                <span className="text-[9px] font-black tracking-[0.15em] text-accent uppercase bg-black/70 px-2 py-0.5 rounded-md shadow">
+                                  Drop into {folder.name}
                                 </span>
                               </motion.div>
                             )}
                           </AnimatePresence>
 
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center group-hover:bg-accent/20 transition-colors">
-                              <Folder className="w-5 h-5 text-accent" />
+                            <div className={cn(
+                              "w-10 h-10 rounded-xl flex items-center justify-center transition-all",
+                              dragOverFolderId === folder.id ? "bg-accent text-black shadow-lg shadow-accent/30 scale-110" : "bg-accent/10 text-accent group-hover:bg-accent/20"
+                            )}>
+                              <Folder className={cn("w-5 h-5", dragOverFolderId === folder.id && "fill-black")} />
                             </div>
                             <div className="min-w-0 flex-1">
                               <p className="text-xs font-bold truncate text-white group-hover:text-accent transition-colors">{folder.name}</p>
@@ -2729,17 +2790,38 @@ export default function App() {
                           transition={{ delay: idx * 0.05 }}
                           draggable
                           onDragStart={(e) => {
+                            const filesToMove = selectedFiles.includes(file.id) && selectedFiles.length > 0 
+                              ? selectedFiles 
+                              : [file.id];
                             const data = {
                               type: "vault-file",
                               fileId: file.id,
-                              selectedFileIds: selectedFiles.includes(file.id) ? selectedFiles : [file.id]
+                              selectedFileIds: filesToMove
                             };
                             e.dataTransfer.setData("text/plain", JSON.stringify(data));
                             e.dataTransfer.effectAllowed = "move";
+                            setIsDraggingFiles(true);
+                            setDraggingFileCount(filesToMove.length);
+
+                            // Optional custom drag preview if multiple files
+                            if (filesToMove.length > 1) {
+                              const dragBadge = document.createElement('div');
+                              dragBadge.className = 'fixed -top-96 bg-accent text-black font-black text-xs px-3 py-1.5 rounded-xl shadow-2xl flex items-center gap-1.5';
+                              dragBadge.innerText = `Moving ${filesToMove.length} Files`;
+                              document.body.appendChild(dragBadge);
+                              e.dataTransfer.setDragImage(dragBadge, 20, 20);
+                              setTimeout(() => document.body.removeChild(dragBadge), 100);
+                            }
+                          }}
+                          onDragEnd={() => {
+                            setIsDraggingFiles(false);
+                            setDraggingFileCount(0);
+                            setDragOverFolderId(null);
                           }}
                           className={cn(
                             "glass-card p-4 sm:p-6 rounded-[24px] sm:rounded-3xl flex items-center justify-between group gap-3 sm:gap-4 transition-all relative overflow-hidden cursor-grab active:cursor-grabbing",
-                            selectedFiles.includes(file.id) ? "border-accent/50 bg-accent/[0.03]" : "hover:border-white/20 hover:bg-white/[0.01]"
+                            selectedFiles.includes(file.id) ? "border-accent/50 bg-accent/[0.03] ring-1 ring-accent/30" : "hover:border-white/20 hover:bg-white/[0.01]",
+                            isDraggingFiles && selectedFiles.includes(file.id) && "opacity-60 scale-95"
                           )}
                         >
                           <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
