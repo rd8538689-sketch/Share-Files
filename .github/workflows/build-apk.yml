@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - master
   workflow_dispatch:
 
 permissions:
@@ -65,7 +66,12 @@ jobs:
             echo "Error: Failed to create ./debug.keystore"
             exit 1
           fi
-          echo "Temporary debug keystore verified."
+
+          # Also copy to app directory if needed for any relative path resolution
+          mkdir -p app
+          cp -f ./debug.keystore app/debug.keystore || true
+
+          echo "Temporary debug keystore verified at ./debug.keystore and app/debug.keystore"
 
       - name: Build debug APK
         run: |
