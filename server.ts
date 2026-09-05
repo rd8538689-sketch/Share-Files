@@ -3,17 +3,12 @@ import { createServer as createViteServer } from 'vite';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs-extra';
-import { fileURLToPath } from 'url';
 import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
-
 import nodemailer from 'nodemailer';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 const PORT = 3000;
-const UPLOADS_DIR = path.join(__dirname, 'uploads');
+const UPLOADS_DIR = path.join(process.cwd(), 'uploads');
 
 // Email configuration
 const transporter = nodemailer.createTransport({
@@ -193,7 +188,7 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     console.log('Starting in production mode...');
-    const distPath = path.resolve(__dirname, 'dist');
+    const distPath = path.join(process.cwd(), 'dist');
     console.log('Resolved distPath:', distPath);
     if (fs.existsSync(distPath)) {
       console.log('Serving static files from:', distPath);
